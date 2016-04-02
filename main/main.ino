@@ -4,7 +4,7 @@
  * 
  */
 
-#define BUZZER_PIN 0 //TODO: SET LATER
+#define BUZZER_PIN 2 //PB30
 #define FORCE_PIN 22 //PB00
 
 #define FORCE_RATIO_THRESHOLD 1.5
@@ -27,6 +27,7 @@ boolean isArmed = false;
 void setup() {
   Serial.begin(115200);
   // pin initialization
+  pinMode(BUZZER_PIN, OUTPUT);
   pinMode(FORCE_PIN, INPUT);
 
 }
