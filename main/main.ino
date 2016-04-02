@@ -7,6 +7,7 @@
 #define BUZZER_PIN 0 //TODO: SET LATER
 #define FORCE_PIN 22 //PB00
 
+//testasdffkjsldf
 int forceReading = 0;
 
 void setup() {
