@@ -20,8 +20,11 @@ uint16_t currtouched = 0;
 /* end Touchpad Initializations */
 
 
-#define BUZZER_PIN 2 //PB30
-#define FORCE_PIN 22 //PB00
+#define BUZZER_PIN 2  //PB30
+#define FORCE_PIN 22  //PB00
+
+#define GREEN_LED_PIN 4 //PB06
+#define RED_LED_PIN 5   //PB07
 
 #define CODE_LENGTH 4 // if you change this, change code[] initialization!
 #define FORCE_RATIO_THRESHOLD 1.5
@@ -62,6 +65,8 @@ void setup() {
   }
   Serial.println("MPR121 found!");
 
+  // LED Initialization
+  initLEDs();
 }
 
 void loop() {
@@ -112,7 +117,7 @@ void setCode() {
     }
 
     // arm device
-    isArmed = true;
+    ARM();
     // reset code entered
     codeCount = 0;
     Serial.println("Device Armed!");
@@ -170,12 +175,13 @@ void checkKeypadCode() {
     if (isMatched) {
        Serial.println("CorrectCode!");
        // Disarm
-       isArmed = false;
+       DISARM();
        Serial.println("Unarmed!");
     }
 
     else {
        Serial.println("Wrong Code!");
+       flashLED(RED_LED_PIN);
     }
 
     // reset code entered
@@ -202,5 +208,58 @@ void checkPackages() {
 
 
 
-/*------------------------- TOUCHPAD FUNCTIONS------------------- */
+/*---------------------LED HELPER FUNCTIONS---------------------------*/
+void initLEDs() {
+  pinMode(GREEN_LED_PIN, OUTPUT);
+  pinMode(RED_LED_PIN, OUTPUT);
+  digitalWrite(GREEN_LED_PIN, HIGH);
+  digitalWrite(RED_LED_PIN, LOW);
+}
+void greenLEDOn() {
+  digitalWrite(GREEN_LED_PIN, HIGH);
+}
+
+void greenLEDOff() {
+  digitalWrite(GREEN_LED_PIN, LOW);
+}
+
+void redLEDOn() {
+  digitalWrite(RED_LED_PIN, HIGH);
+}
+
+void redLEDOff() {
+  digitalWrite(RED_LED_PIN, LOW);
+}
+
+void toggleLED(int ledPin) {
+  digitalWrite(ledPin, !digitalRead(ledPin));
+}
+
+void flashLED(int ledPin) {
+  // remember starting state of led
+  boolean lastState = digitalRead(ledPin);
+  for (int i=0; i < 5; i++) {
+    toggleLED(ledPin);
+    delay(50);
+  }
+  // set led back to original state
+  digitalWrite(ledPin, HIGH);
+}
+
+/*--------------------------ARMING HELPER FUNCTIONS----------------------*/
+void ARM() {
+  isArmed = true;
+  greenLEDOff();
+  redLEDOn();
+}
+
+void DISARM() {
+  isArmed = false;
+  redLEDOff();
+  greenLEDOn();
+}
+
+
+
+
 
