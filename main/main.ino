@@ -4,9 +4,6 @@
  * 
  */
 
-#define BUZZER_PIN 2 //PB30
-#define FORCE_PIN 22 //PB00
-
 #define FORCE_RATIO_THRESHOLD 0.9
 #define FORCE_FLAT_THRESHOLD 50
 
@@ -44,8 +41,11 @@ uint16_t currtouched = 0;
 /* end Touchpad Initializations */
 
 
-#define BUZZER_PIN 2 //PB30
-#define FORCE_PIN 22 //PB00
+#define BUZZER_PIN 2  //PB30
+#define FORCE_PIN 22  //PB00
+
+#define GREEN_LED_PIN 4 //PB06
+#define RED_LED_PIN 5   //PB07
 
 #define CODE_LENGTH 4 // if you change this, change code[] initialization!
 
@@ -87,6 +87,8 @@ void setup() {
 
 
   pubNubSetup();
+  // LED Initialization
+  initLEDs();
 }
 
 void loop() {
@@ -140,10 +142,9 @@ void setCode() {
     }
 
     // arm device
-    isArmed = true;
+    ARM();
     // reset code entered
     codeCount = 0;
-    Serial.println("Device Armed!");
     Serial.print("Code: ");
     for (int i=0; i<CODE_LENGTH; i++) {
       Serial.print(code[i]);
@@ -168,7 +169,7 @@ void checkKeypadCode() {
     // it if *is* touched and *wasnt* touched before, alert!
     if ((currtouched & _BV(i)) && !(lasttouched & _BV(i)) && lasttouched == 0) {
 //      Serial.print(i); Serial.println(" touched");
-      code[codeCount] = i;
+      currCode[codeCount] = i;
       codeCount++;
     }
     // if it *was* touched and now *isnt*, alert!
@@ -198,13 +199,24 @@ void checkKeypadCode() {
     if (isMatched) {
        Serial.println("CorrectCode!");
        // Disarm
-       isArmed = false;
-       Serial.println("Unarmed!");
+       DISARM();
     }
 
     else {
        Serial.println("Wrong Code!");
+       flashRedLED();
     }
+
+    Serial.print("Correct Code: ");
+    for (int i=0; i<CODE_LENGTH; i++) {
+      Serial.print(code[i]);
+    }
+    Serial.println();
+    Serial.print("Code Entered: ");
+    for (int i=0; i<CODE_LENGTH; i++) {
+      Serial.print(currCode[i]);
+    }
+    Serial.println();
 
     // reset code entered
     codeCount = 0;
@@ -243,7 +255,76 @@ void checkPackages() {
 
 
 
-/*------------------------- TOUCHPAD FUNCTIONS------------------- */
+/*---------------------LED HELPER FUNCTIONS---------------------------*/
+void initLEDs() {
+  pinMode(GREEN_LED_PIN, OUTPUT);
+  pinMode(RED_LED_PIN, OUTPUT);
+  digitalWrite(GREEN_LED_PIN, HIGH);
+  digitalWrite(RED_LED_PIN, LOW);
+}
+void greenLEDOn() {
+  digitalWrite(GREEN_LED_PIN, HIGH);
+}
+
+void greenLEDOff() {
+  digitalWrite(GREEN_LED_PIN, LOW);
+}
+
+void redLEDOn() {
+  digitalWrite(RED_LED_PIN, HIGH);
+}
+
+void redLEDOff() {
+  digitalWrite(RED_LED_PIN, LOW);
+}
+
+void toggleLED(int ledPin) {
+  digitalWrite(ledPin, !digitalRead(ledPin));
+}
+
+/*
+ * This function leaves the red led ON after flashing
+ */
+void flashRedLED() {
+  for (int i=0; i < 5; i++) {
+    redLEDOff();
+    delay(50);
+    redLEDOn();
+    delay(50);
+  }
+}
+
+//void flashLED(int ledPin) {
+//  // remember starting state of led
+//  boolean lastState = digitalRead(ledPin);
+//  for (int i=0; i < 5; i++) {
+//    toggleLED(ledPin);
+//    delay(50);
+//  }
+//  // set led back to original state
+//  digitalWrite(ledPin, HIGH);
+//}
+
+/*--------------------------ARMING HELPER FUNCTIONS----------------------*/
+void ARM() {
+  isArmed = true;
+  greenLEDOff();
+  redLEDOn();
+
+  Serial.println("Device Armed!");
+}
+
+void DISARM() {
+  isArmed = false;
+  redLEDOff();
+  greenLEDOn();
+
+  Serial.println("Unarmed!");
+}
+
+
+
+
 
 
 /*------------------------- PUBNUB STUFF ------------------------ */
