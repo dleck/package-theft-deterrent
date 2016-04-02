@@ -20,10 +20,11 @@ uint16_t currtouched = 0;
 /* end Touchpad Initializations */
 
 
-#define BUZZER_PIN 0 //TODO: SET LATER
+#define BUZZER_PIN 2 //PB30
 #define FORCE_PIN 22 //PB00
 
 #define CODE_LENGTH 4
+#define FORCE_RATIO_THRESHOLD 1.5
 
 /*
  * Capacitive Touchpad
@@ -36,7 +37,8 @@ uint16_t currtouched = 0;
  */
  
 
-int forceReading = 0;
+int newForceReading = 0;
+int oldForceReading = 0;
 boolean isArmed = false;
 
 int code[CODE_LENGTH] = {0, 0, 0, 0};
@@ -47,7 +49,8 @@ void setup() {
   Serial.begin(115200);
   
   // pin initialization
-  // pinMode(FORCE_PIN, INPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+  pinMode(FORCE_PIN, INPUT);
 
   // touchpad initialization
   // Default address is 0x5A, if tied to 3.3V its 0x5B
@@ -127,8 +130,16 @@ void checkKeypadCode() {
 
 void checkPackages() {
   // check new force resistor value
+  oldForceReading = newForceReading;
+  newForceReading = analogRead(FORCE_PIN);
+  
   // compare force values
   // update force value OR trigger theft alarm
+
+  // trigger alarm
+  if ( float(newForceReading)/float(oldForceReading) < FORCE_RATIO_THRESHOLD ) {
+    digitalWrite(BUZZER_PIN, HIGH);
+  }
 }
 
 
