@@ -4,10 +4,11 @@
  * 
  */
 
-#define BUZZER_PIN 2 //PB30
+#define BUZZER_PIN 16 //PB02
 #define FORCE_PIN 22 //PB00
 
-#define FORCE_RATIO_THRESHOLD 1.5
+#define FORCE_RATIO_THRESHOLD .9
+#define FORCE_FLAT_THRESHOLD 50
 
 /*
  * Capacitive Touchpad
@@ -33,6 +34,7 @@ void setup() {
 }
 
 void loop() {
+  monitorPackages();  //temporary to test
   if (isArmed) {
     monitorPackages();
   }
@@ -70,9 +72,18 @@ void checkPackages() {
   // update force value OR trigger theft alarm
 
   // trigger alarm
-  if ( float(newForceReading)/float(oldForceReading) < FORCE_RATIO_THRESHOLD ) {
-    digitalWrite(BUZZER_PIN, HIGH);
+  float ratio = float(newForceReading)/float(oldForceReading);
+  if ( newForceReading > FORCE_FLAT_THRESHOLD && ratio < FORCE_RATIO_THRESHOLD ) {
+    analogWrite(BUZZER_PIN, 600);
   }
+
+  Serial.print("oldForceReading = ");
+  Serial.print(oldForceReading);
+  Serial.print(", newForceReading = ");
+  Serial.print(newForceReading);
+  Serial.print(", ratio = ");
+  Serial.println(ratio);
+  delay(1000);
 }
 
 
