@@ -25,7 +25,10 @@ uint16_t currtouched = 0;
 /* end Touchpad Initializations */
 
 
-#define CODE_LENGTH 4
+#define BUZZER_PIN 2 //PB30
+#define FORCE_PIN 22 //PB00
+
+#define CODE_LENGTH 4 // if you change this, change code[] initialization!
 
 /*
  * Capacitive Touchpad
@@ -43,6 +46,7 @@ int oldForceReading = 0;
 boolean isArmed = false;
 
 int code[CODE_LENGTH] = {0, 0, 0, 0};
+int currCode[CODE_LENGTH] = {0, 0, 0, 0};
 int codeCount = 0;
 
 void setup() {
@@ -92,13 +96,13 @@ void setCode() {
   for (uint8_t i=0; i<12; i++) {
     // it if *is* touched and *wasnt* touched before, alert!
     if ((currtouched & _BV(i)) && !(lasttouched & _BV(i)) && lasttouched == 0) {
-      Serial.print(i); Serial.println(" touched");
+//      Serial.print(i); Serial.println(" touched");
       code[codeCount] = i;
       codeCount++;
     }
     // if it *was* touched and now *isnt*, alert!
     if (!(currtouched & _BV(i)) && (lasttouched & _BV(i)) ) {
-      Serial.print(i); Serial.println(" released");
+//      Serial.print(i); Serial.println(" released");
     }
   }
 
@@ -108,10 +112,14 @@ void setCode() {
   // full code entered, arm device
   if (!(codeCount < 4)) {
     // wait for all buttons to be released
-//    while(lasttouched != 0);
+    while(lasttouched != 0) {
+      lasttouched = cap.touched();
+    }
 
     // arm device
     isArmed = true;
+    // reset code entered
+    codeCount = 0;
     Serial.println("Device Armed!");
     Serial.print("Code: ");
     for (int i=0; i<CODE_LENGTH; i++) {
@@ -128,6 +136,57 @@ void checkKeypadCode() {
   // and also keep track of the numbers entered so far,
   // then compare when the enter key is hit
   // --> if match, disarm
+
+  // Get the currently touched pads
+  currtouched = cap.touched();
+
+  // TODO: solve for case where user presses multiple buttons SUPER SIMULANEOUSLY
+  for (uint8_t i=0; i<12; i++) {
+    // it if *is* touched and *wasnt* touched before, alert!
+    if ((currtouched & _BV(i)) && !(lasttouched & _BV(i)) && lasttouched == 0) {
+//      Serial.print(i); Serial.println(" touched");
+      code[codeCount] = i;
+      codeCount++;
+    }
+    // if it *was* touched and now *isnt*, alert!
+    if (!(currtouched & _BV(i)) && (lasttouched & _BV(i)) ) {
+//      Serial.print(i); Serial.println(" released");
+    }
+  }
+
+  // reset our state
+  lasttouched = currtouched;
+
+  // full code entered, check if correct
+  if (!(codeCount < 4)) {
+    // wait for all buttons to be released
+    while(lasttouched != 0) {
+      lasttouched = cap.touched();
+    }
+
+    // check code
+    boolean isMatched = true;
+    for (int i=0; i < CODE_LENGTH; i++) {
+      if (code[i] != currCode[i]) {
+        isMatched = false;
+      }
+    }
+
+    if (isMatched) {
+       Serial.println("CorrectCode!");
+       // Disarm
+       isArmed = false;
+       Serial.println("Unarmed!");
+    }
+
+    else {
+       Serial.println("Wrong Code!");
+    }
+
+    // reset code entered
+    codeCount = 0;
+  }
+  
 }
 
 void checkPackages() {
