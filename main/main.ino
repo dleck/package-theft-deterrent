@@ -7,7 +7,6 @@
 #define BUZZER_PIN 0 //TODO: SET LATER
 #define FORCE_PIN 22 //PB00
 
-//testasdffkjsldf
 /*
  * Capacitive Touchpad
  * MPR121 -> SAM D21
