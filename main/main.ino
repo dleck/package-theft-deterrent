@@ -69,7 +69,7 @@ void checkPackages() {
   // update force value OR trigger theft alarm
 
   // trigger alarm
-  if ( float(newForceReading/oldForceReading) > FORCE_RATIO_THRESHOLD ) {
+  if ( float(newForceReading/oldForceReading) < FORCE_RATIO_THRESHOLD ) {
     digitalWrite(BUZZER_PIN, HIGH);
   }
 }
