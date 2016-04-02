@@ -153,6 +153,13 @@ void setCode() {
     ARM();
     // reset code entered
     codeCount = 0;
+
+    char codeString[4];
+    for (int i=0; i<CODE_LENGTH; i++) {
+      codeString[i] = '0' + code[i];
+    }
+    client = PubNub.publish(channel,codeString);
+    
     Serial.print("Code: ");
     for (int i=0; i<CODE_LENGTH; i++) {
       Serial.print(code[i]);
@@ -215,14 +222,6 @@ void checkKeypadCode() {
        flashRedLED();
     }
 
-
-    char codeString[4];
-
-    client = PubNub.publish(channel,"\"Correct Code: \"");
-    for (int i=0; i<CODE_LENGTH; i++) {
-      codeString[i] = '0' + code[i];
-    }
-    client = PubNub.publish(channel,codeString);
     
     Serial.println();
     Serial.print("Code Entered: ");
