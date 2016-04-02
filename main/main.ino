@@ -120,7 +120,6 @@ void setCode() {
     ARM();
     // reset code entered
     codeCount = 0;
-    Serial.println("Device Armed!");
     Serial.print("Code: ");
     for (int i=0; i<CODE_LENGTH; i++) {
       Serial.print(code[i]);
@@ -145,7 +144,7 @@ void checkKeypadCode() {
     // it if *is* touched and *wasnt* touched before, alert!
     if ((currtouched & _BV(i)) && !(lasttouched & _BV(i)) && lasttouched == 0) {
 //      Serial.print(i); Serial.println(" touched");
-      code[codeCount] = i;
+      currCode[codeCount] = i;
       codeCount++;
     }
     // if it *was* touched and now *isnt*, alert!
@@ -176,13 +175,23 @@ void checkKeypadCode() {
        Serial.println("CorrectCode!");
        // Disarm
        DISARM();
-       Serial.println("Unarmed!");
     }
 
     else {
        Serial.println("Wrong Code!");
        flashLED(RED_LED_PIN);
     }
+
+    Serial.print("Correct Code: ");
+    for (int i=0; i<CODE_LENGTH; i++) {
+      Serial.print(code[i]);
+    }
+    Serial.println();
+    Serial.print("Code Entered: ");
+    for (int i=0; i<CODE_LENGTH; i++) {
+      Serial.print(currCode[i]);
+    }
+    Serial.println();
 
     // reset code entered
     codeCount = 0;
@@ -251,12 +260,16 @@ void ARM() {
   isArmed = true;
   greenLEDOff();
   redLEDOn();
+
+  Serial.println("Device Armed!");
 }
 
 void DISARM() {
   isArmed = false;
   redLEDOff();
   greenLEDOn();
+
+  Serial.println("Unarmed!");
 }
 
 
