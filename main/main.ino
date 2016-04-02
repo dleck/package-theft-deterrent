@@ -10,8 +10,9 @@
 
 /* Servo stuff */
 #include <Servo.h>
-#define SERVO_PIN 20 //PA12
+#define MOTOR_PIN 16 //PB02
 Servo servo;
+#define MOTOR_SPEED 255
 
 /* begin Touchpad Initializations */
 #include <Wire.h>
@@ -75,6 +76,9 @@ int currCode[CODE_LENGTH] = {0, 0, 0, 0};
 int codeCount = 0;
 
 void setup() {
+  //servo.attach(MOTOR_PIN);
+  pinMode(MOTOR_PIN, OUTPUT);
+  
   while (!Serial);        // needed to keep from starting too fast
   Serial.begin(115200);
   pubNubSetup();
@@ -91,8 +95,6 @@ void setup() {
     while (1);
   }
   Serial.println("MPR121 found!");
-
-  servo.attach(SERVO_PIN);
 
 
   // LED Initialization
@@ -461,10 +463,13 @@ void triggerAlarm()
 
 void firePoppers()
 {
+  /*
   servo.write(1);
   delay(50);
-  servo.write(10);
+  servo.write(30);
   Serial.println("Servo go");
+  */
+  if (MOTOR_SPEED >= 0 && MOTOR_SPEED <= 255) analogWrite(MOTOR_PIN, MOTOR_SPEED);
 }
 
 
