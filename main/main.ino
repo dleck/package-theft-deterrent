@@ -1,7 +1,7 @@
 /*
  * UCSD HARD Hacks April 1, 2016
+ * Authors: Darren Eck, Janet Hoh
  * 
- * Package 
  */
 
 #define BUZZER_PIN 0 //TODO: SET LATER
