@@ -19,6 +19,7 @@
  
 
 int forceReading = 0;
+boolean isArmed = false;
 
 void setup() {
   Serial.begin(115200);
@@ -28,11 +29,39 @@ void setup() {
 }
 
 void loop() {
-  forceReading = analogRead(FORCE_PIN);
-  Serial.println(forceReading);
-  delay(100);
+  if (isArmed) {
+    monitorPackages();
+  }
+  else {
+    setCode();
+  }
 }
 
+
+void monitorPackages() {
+  checkKeypadCode();
+  checkPackages();
+}
+
+void setCode() {
+  // keep track of code entered
+  // record code after enter key is hit
+  // FINALLY arm device
+}
+
+void checkKeypadCode() {
+  // see if code entered matches alarm code
+  // so, we have to check for reset button
+  // and also keep track of the numbers entered so far,
+  // then compare when the enter key is hit
+  // --> if match, disarm
+}
+
+void checkPackages() {
+  // check new force resistor value
+  // compare force values
+  // update force value OR trigger theft alarm
+}
 
 
 
