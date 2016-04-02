@@ -179,7 +179,7 @@ void checkKeypadCode() {
 
     else {
        Serial.println("Wrong Code!");
-       flashLED(RED_LED_PIN);
+       flashRedLED();
     }
 
     Serial.print("Correct Code: ");
@@ -244,16 +244,28 @@ void toggleLED(int ledPin) {
   digitalWrite(ledPin, !digitalRead(ledPin));
 }
 
-void flashLED(int ledPin) {
-  // remember starting state of led
-  boolean lastState = digitalRead(ledPin);
+/*
+ * This function leaves the red led ON after flashing
+ */
+void flashRedLED() {
   for (int i=0; i < 5; i++) {
-    toggleLED(ledPin);
+    redLEDOff();
+    delay(50);
+    redLEDOn();
     delay(50);
   }
-  // set led back to original state
-  digitalWrite(ledPin, HIGH);
 }
+
+//void flashLED(int ledPin) {
+//  // remember starting state of led
+//  boolean lastState = digitalRead(ledPin);
+//  for (int i=0; i < 5; i++) {
+//    toggleLED(ledPin);
+//    delay(50);
+//  }
+//  // set led back to original state
+//  digitalWrite(ledPin, HIGH);
+//}
 
 /*--------------------------ARMING HELPER FUNCTIONS----------------------*/
 void ARM() {
