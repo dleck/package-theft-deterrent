@@ -6,6 +6,12 @@
 
 #define FORCE_RATIO_THRESHOLD 0.9
 #define FORCE_FLAT_THRESHOLD 50
+#define PACKAGE_SETTLE_FORCE 100
+
+/* Servo stuff */
+#include <Servo.h>
+#define SERVO_PIN 20 //PA12
+Servo servo;
 
 /* begin Touchpad Initializations */
 #include <Wire.h>
@@ -41,7 +47,7 @@ uint16_t currtouched = 0;
 /* end Touchpad Initializations */
 
 
-#define BUZZER_PIN 2  //PB30
+#define BUZZER_PIN 7  //PB05
 #define FORCE_PIN 22  //PB00
 
 #define GREEN_LED_PIN 4 //PB06
@@ -71,6 +77,7 @@ int codeCount = 0;
 void setup() {
   while (!Serial);        // needed to keep from starting too fast
   Serial.begin(115200);
+  pubNubSetup();
   
   // pin initialization
   pinMode(BUZZER_PIN, OUTPUT);
@@ -85,15 +92,16 @@ void setup() {
   }
   Serial.println("MPR121 found!");
 
+  servo.attach(SERVO_PIN);
 
-  pubNubSetup();
+
   // LED Initialization
   initLEDs();
 }
 
 void loop() {
   
-//  monitorPackages();  //temporary to test
+  // monitorPackages();  //temporary to test
 
   if (isArmed) {
     monitorPackages();
@@ -207,10 +215,15 @@ void checkKeypadCode() {
        flashRedLED();
     }
 
-    Serial.print("Correct Code: ");
+
+    char codeString[4];
+
+    client = PubNub.publish(channel,"\"Correct Code: \"");
     for (int i=0; i<CODE_LENGTH; i++) {
-      Serial.print(code[i]);
+      codeString[i] = '0' + code[i];
     }
+    client = PubNub.publish(channel,codeString);
+    
     Serial.println();
     Serial.print("Code Entered: ");
     for (int i=0; i<CODE_LENGTH; i++) {
@@ -228,6 +241,9 @@ void checkPackages() {
   // check new force resistor value
   oldForceReading = newForceReading;
   newForceReading = analogRead(FORCE_PIN);
+
+  //delay for package to settle
+  if (abs(oldForceReading - newForceReading) > PACKAGE_SETTLE_FORCE) delay(1000);
   
   // compare force values
   // update force value OR trigger theft alarm
@@ -235,11 +251,10 @@ void checkPackages() {
   // trigger alarm
   float ratio = float(newForceReading)/float(oldForceReading);
   if ( oldForceReading > FORCE_FLAT_THRESHOLD && ratio < FORCE_RATIO_THRESHOLD ) {
-    digitalWrite(BUZZER_PIN, HIGH);
-    alertPhone();
-    Serial.print("ALARM ACTIVATED! ");
+    triggerAlarm();
   }
 
+/*
   Serial.print(oldForceReading > FORCE_FLAT_THRESHOLD);
   Serial.print(ratio < FORCE_RATIO_THRESHOLD);
   Serial.print("oldForceReading = ");
@@ -248,7 +263,8 @@ void checkPackages() {
   Serial.print(newForceReading);
   Serial.print(", ratio = ");
   Serial.println(ratio);
-  delay(1000);
+*/
+  //delay(1000);
 }
 
 
@@ -311,15 +327,17 @@ void ARM() {
   greenLEDOff();
   redLEDOn();
 
-  Serial.println("Device Armed!");
+  client = PubNub.publish(channel,"\"Device Armed!\"");
+  
 }
 
 void DISARM() {
   isArmed = false;
   redLEDOff();
   greenLEDOn();
+  digitalWrite(BUZZER_PIN, LOW);
 
-  Serial.println("Unarmed!");
+  client = PubNub.publish(channel,"\"Unarmed!\"");
 }
 
 
@@ -328,7 +346,7 @@ void DISARM() {
 
 
 /*------------------------- PUBNUB STUFF ------------------------ */
-void read_adc_channels(void)
+/*void read_adc_channels(void)
 {
   int channel_id;
 
@@ -340,15 +358,17 @@ void read_adc_channels(void)
     sprintf(uart_str,"ch %d : %d\r\n",channel_id,adc_data[channel_id]);
     Serial.println(uart_str);
   }
-}
+}*/
 
 void pubNubSetup() {
   
   while(!Serial) ;
 
+  /*
   Serial.println("PubNub Arduino Zero WiFi101 example project V1.0");
   Serial.println("Jan 2016 / Atmel Corp");
-
+  */
+  
   if (WiFi.status() == WL_NO_SHIELD)
   {
     Serial.println("WiFi101 shield not present");
@@ -412,7 +432,8 @@ void alertPhone()
 
   */
 
-  client = PubNub.publish(channel,"\"Someone stole your shit\"" );
+
+  //client = PubNub.publish(channel,"\"Someone stole your shit!!!\"" );
   /*
   if (!client)
   {
@@ -424,14 +445,28 @@ void alertPhone()
   }
   */
   
-  client->stop();
+  //client->stop();
 
   //delay(1000);
 }
 
+/********************************** TRIGGER ALARM **********************************/
+void triggerAlarm()
+{
+    digitalWrite(BUZZER_PIN, HIGH);
+    client = PubNub.publish(channel,"\"Someone stole your shit\"" ); //alert phone
+    firePoppers();
+    Serial.print("ALARM ACTIVATED! ");
+}
 
 
-
+void firePoppers()
+{
+  servo.write(1);
+  delay(50);
+  servo.write(10);
+  Serial.println("Servo go");
+}
 
 
 
