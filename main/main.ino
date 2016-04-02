@@ -15,6 +15,25 @@
 #include "Adafruit_MPR121.h"
 #define _BV(bit) (1 << (bit))   // added for compatibility
 
+/* Pubnub stuff */
+#include <SPI.h>
+#include <WiFi101.h>
+#include <PubNub.h>
+
+static char ssid[] = "deck";         // your network SSID (name)
+static char pass[] = "hannah1337";        // your network password
+int status = WL_IDLE_STATUS;                  // the Wifi radio's status
+
+const static char pubkey[] = "pub-c-50f8f9ce-6321-4407-a581-ebc1c40e570f";
+const static char subkey[] = "sub-c-1815d148-f8ba-11e5-a492-02ee2ddab7fe";
+const static char channel[] = "test_channel";
+
+char uart_str[80];
+int adc_data[4];
+WiFiClient *client;
+char msg[40];
+
+
 // You can have up to 4 on one i2c bus but one is enough!
 Adafruit_MPR121 cap = Adafruit_MPR121();
 
@@ -66,10 +85,14 @@ void setup() {
   }
   Serial.println("MPR121 found!");
 
+
+  pubNubSetup();
 }
 
 void loop() {
+  
   monitorPackages();  //temporary to test
+
   if (isArmed) {
     monitorPackages();
   }
@@ -201,6 +224,7 @@ void checkPackages() {
   float ratio = float(newForceReading)/float(oldForceReading);
   if ( oldForceReading > FORCE_FLAT_THRESHOLD && ratio < FORCE_RATIO_THRESHOLD ) {
     digitalWrite(BUZZER_PIN, HIGH);
+    alertPhone();
     Serial.print("ALARM ACTIVATED! ");
   }
 
@@ -220,4 +244,119 @@ void checkPackages() {
 
 
 /*------------------------- TOUCHPAD FUNCTIONS------------------- */
+
+
+/*------------------------- PUBNUB STUFF ------------------------ */
+void read_adc_channels(void)
+{
+  int channel_id;
+
+  Serial.println("Reading ADC channels 0 - 3");
+
+  for(channel_id = 0; channel_id < 4;channel_id++)
+  {
+    adc_data[channel_id] = analogRead(channel_id);
+    sprintf(uart_str,"ch %d : %d\r\n",channel_id,adc_data[channel_id]);
+    Serial.println(uart_str);
+  }
+}
+
+void pubNubSetup() {
+  
+  while(!Serial) ;
+
+  Serial.println("PubNub Arduino Zero WiFi101 example project V1.0");
+  Serial.println("Jan 2016 / Atmel Corp");
+
+  if (WiFi.status() == WL_NO_SHIELD)
+  {
+    Serial.println("WiFi101 shield not present");
+
+    while (true);
+    // attempt to connect using WEP encryption:
+  }
+  Serial.println("Initializing Wifi...");
+  // printMacAddress();
+
+  String fv = WiFi.firmwareVersion();
+  Serial.print("firmware version ");
+  Serial.println(fv);
+
+
+  // attempt to connect using WPA2 encryption:
+  Serial.println("Connect to network...");
+  status = WiFi.begin(ssid, pass);
+
+  // if you're not connected, stop here:
+  if ( status != WL_CONNECTED)
+  {
+    Serial.println("Connect fail");
+    while (true);
+  }
+  else
+  {
+    Serial.print("connected to SSID: ");
+    Serial.println(ssid);
+
+    PubNub.begin(pubkey, subkey);
+    Serial.println("PubNub set up");
+  }
+  
+}
+
+void alertPhone()
+{
+  /*
+  read_adc_channels();
+
+  sprintf(msg,"{\"ch0\":\"%d\"}",adc_data[0]);
+  client = PubNub.publish(channel, msg);
+
+  sprintf(msg,"{\"ch1\":\"%d\"}",adc_data[1]);
+  client = PubNub.publish(channel, msg);
+
+  sprintf(msg,"{\"ch2\":\"%d\"}",adc_data[2]);
+  client = PubNub.publish(channel, msg);
+
+  sprintf(msg,"{\"ch3\":\"%d\"}",adc_data[3]);
+  client = PubNub.publish(channel, msg);
+  */
+
+  /*
+  sprintf(buf, "{\"device\":\"%s\", \"temperature\":\"%d.%d\", \"light\":\"%d\", \"led\":\"%s\"}",
+            PubNubChannel,
+            (int)temperature, (int)((int)(temperature * 100) % 100),
+            (((4096 - light) * 100) / 4096),
+            port_pin_get_output_level(LED0_PIN) ? "0" : "1");
+
+  */
+
+  client = PubNub.publish(channel,"\"Someone stole your shit\"" );
+  /*
+  if (!client)
+  {
+    Serial.println("publishing error");
+  }
+  else
+  {
+    Serial.println("msg published");
+  }
+  */
+  
+  client->stop();
+
+  //delay(1000);
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
