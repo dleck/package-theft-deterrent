@@ -93,7 +93,7 @@ void setup() {
 
 void loop() {
   
-  monitorPackages();  //temporary to test
+//  monitorPackages();  //temporary to test
 
   if (isArmed) {
     monitorPackages();
