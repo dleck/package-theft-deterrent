@@ -4,10 +4,10 @@
  * 
  */
 
-#define BUZZER_PIN 16 //PB02
+#define BUZZER_PIN 2 //PB30
 #define FORCE_PIN 22 //PB00
 
-#define FORCE_RATIO_THRESHOLD .9
+#define FORCE_RATIO_THRESHOLD 0.9
 #define FORCE_FLAT_THRESHOLD 50
 
 /* begin Touchpad Initializations */
@@ -26,7 +26,6 @@ uint16_t currtouched = 0;
 
 
 #define CODE_LENGTH 4
-#define FORCE_RATIO_THRESHOLD 1.5
 
 /*
  * Capacitive Touchpad
@@ -141,10 +140,13 @@ void checkPackages() {
 
   // trigger alarm
   float ratio = float(newForceReading)/float(oldForceReading);
-  if ( newForceReading > FORCE_FLAT_THRESHOLD && ratio < FORCE_RATIO_THRESHOLD ) {
-    analogWrite(BUZZER_PIN, 600);
+  if ( oldForceReading > FORCE_FLAT_THRESHOLD && ratio < FORCE_RATIO_THRESHOLD ) {
+    digitalWrite(BUZZER_PIN, HIGH);
+    Serial.print("ALARM ACTIVATED! ");
   }
 
+  Serial.print(oldForceReading > FORCE_FLAT_THRESHOLD);
+  Serial.print(ratio < FORCE_RATIO_THRESHOLD);
   Serial.print("oldForceReading = ");
   Serial.print(oldForceReading);
   Serial.print(", newForceReading = ");
